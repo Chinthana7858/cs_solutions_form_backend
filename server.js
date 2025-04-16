@@ -15,42 +15,34 @@ db.connect(err => {
   console.log('Connected to MySQL');
 });
 
+// Generate a random 6-digit integer ID
+function generateRandomId() {
+  return Math.floor(100000 + Math.random() * 900000);
+}
+
 app.post('/register', (req, res) => {
   const { firstName, lastName, jobTitle, company, mobileNumber, email, website } = req.body;
+  const id = generateRandomId(); // 🎲 Random ID
 
-  // Step 1: Get the current max ID
-  const getMaxIdSql = `SELECT MAX(id) AS maxId FROM registrations`;
+  const sql = `INSERT INTO registrations
+    (id, firstName, lastName, jobTitle, company, mobileNumber, email, website) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  db.query(getMaxIdSql, (err, result) => {
+  const values = [id, firstName, lastName, jobTitle, company, mobileNumber, email, website];
+
+  db.query(sql, values, (err, result) => {
     if (err) {
-      console.error("Failed to fetch max id:", err);
-      return res.status(500).json({ error: 'Database error while generating ID' });
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.status(409).json({ error: 'ID or Email already exists' });
+      }
+      console.error("Insert error:", err);
+      return res.status(500).json({ error: 'Database error' });
     }
 
-    const nextId = (result[0].maxId || 0) + 1;
-
-    // Step 2: Insert with the new ID
-    const insertSql = `INSERT INTO registrations
-      (id, firstName, lastName, jobTitle, company, mobileNumber, email, website) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
-    const values = [nextId, firstName, lastName, jobTitle, company, mobileNumber, email, website];
-
-    db.query(insertSql, values, (err, result) => {
-      if (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-          return res.status(409).json({ error: 'Email already registered' });
-        }
-        console.error("Insert error:", err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-
-      res.json({ message: 'Registration successful', id: nextId });
-    });
+    res.json({ message: 'Registration successful', id });
   });
 });
 
-// Get all registrations
 app.get('/registrations', (req, res) => {
   const sql = `SELECT * FROM registrations`;
 
