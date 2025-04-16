@@ -20,14 +20,18 @@ db.connect(err => {
 app.post('/register', (req, res) => {
   const { firstName, lastName, jobTitle, company, mobileNumber, email, website } = req.body;
 
-  const sql = `INSERT INTO registrations 
+  const sql = `INSERT INTO registration
     (firstName, lastName, jobTitle, company, mobileNumber, email, website) 
     VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-  db.query(sql, [firstName, lastName, jobTitle, company, mobileNumber, email, website], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json({ message: 'Registration successful' });
-  });
+    db.query(sql, [firstName, lastName, jobTitle, company, mobileNumber, email, website], (err, result) => {
+      if (err) {
+        console.error("Insert error:", err); 
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json({ message: 'Registration successful' });
+    });
+    
 });
 
 const PORT = 3001;
