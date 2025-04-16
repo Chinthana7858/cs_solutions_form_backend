@@ -1,5 +1,5 @@
 {
-  "name": "cs_solutions_form_backend",
+  "name": "cseventmanagement-backend",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
